@@ -16,6 +16,7 @@ import Test.Hspec
 import qualified Data.Map as Map
 import qualified Data.UUID as UUID
 import qualified SAML2.WebSSO as SAML
+import qualified Text.XML.Util as SAML
 
 
 data TestState = TestState
@@ -46,7 +47,7 @@ run = fmap snd . runState . fromTestSpar
 spec :: Spec
 spec = do
   describe "onSuccess" $ do
-    let samluid  = SAML.UserId (SAML.Issuer (SAML.opaqueNameID "wef")) (SAML.opaqueNameID "phoo")
+    let samluid  = SAML.UserId (SAML.Issuer $ SAML.unsafeParseURI "http://example.com/") (SAML.opaqueNameID "phoo")
         briguid  = Id UUID.nil
         tstempty = TestState mempty Nothing briguid
         tstfull  = TestState mempty (Just briguid) (error "should not have called createUser!")
