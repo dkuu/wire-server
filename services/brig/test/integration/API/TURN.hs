@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns      #-} 
+{-# LANGUAGE ViewPatterns      #-}
 
 module API.TURN where
 
@@ -10,6 +10,7 @@ import Control.Concurrent (threadDelay)
 import Control.Lens ((^.), (#))
 import Control.Monad.IO.Class
 import Data.ByteString (ByteString)
+import Data.ByteString.Conversion
 import Data.Id
 import Data.Foldable
 import Data.List ((\\))
@@ -126,7 +127,7 @@ getTurnConfigurationV2 :: UserId -> Brig -> Http RTCConfiguration
 getTurnConfigurationV2 = getAndValidateTurnConfiguration "v2"
 
 getTurnConfiguration :: ByteString -> UserId -> Brig -> Http (Response (Maybe LB.ByteString))
-getTurnConfiguration suffix u b = get ( b 
+getTurnConfiguration suffix u b = get ( b
                                 . paths ["/calls/config", suffix]
                                 . zUser u
                                 . zConn "conn"
@@ -137,14 +138,14 @@ getAndValidateTurnConfiguration suffix u b = do
     r <- getTurnConfiguration suffix u b <!! const 200 === statusCode
     return $ fromMaybe (error "getTurnConfiguration: failed to parse response") (decodeBody r)
 
-toTurnURILegacy :: String -> Port -> TurnURI
+toTurnURILegacy :: ByteString -> Port -> TurnURI
 toTurnURILegacy h p = toTurnURI SchemeTurn h p Nothing
 
-toTurnURI :: Scheme -> String -> Port -> Maybe Transport -> TurnURI
-toTurnURI s h p t = turnURI s (_TurnHost # ip) p t
+toTurnURI :: Scheme -> ByteString -> Port -> Maybe Transport -> TurnURI
+toTurnURI s h p t = turnURI s ip p t
   where
-    ip = fromMaybe (error "Failed to parse ip address")
-       $ readMay h
+    ip = fromMaybe (error "Failed to parse host address")
+       $ fromByteString h
 
 setTurn :: FilePath -> String -> IO ()
 setTurn cfgDest newConf = do

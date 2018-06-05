@@ -19,6 +19,7 @@ import Brig.Types.Code
 import Brig.Types.TURN
 import Brig.Types.User
 import Brig.Types.User.Auth
+import Control.Applicative
 import Control.Lens hiding (elements)
 import Control.Monad
 import Data.Currency
@@ -71,7 +72,8 @@ instance Arbitrary IpAddr where
         ipV4Part = octet <$> arbitrary
 
 instance Arbitrary TurnHost where
-    arbitrary = TurnHost <$> arbitrary
+    arbitrary = TurnHostIp   <$> arbitrary
+             -- <|> (TurnHostName <$> arbitrary)
 
 instance Arbitrary Port where
     arbitrary = Port <$> arbitrary
