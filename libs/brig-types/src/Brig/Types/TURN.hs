@@ -25,6 +25,7 @@ module Brig.Types.TURN
     , Transport (..)
 
     , TurnHost (..)
+    , isHostName
     , TurnUsername
     , turnUsername
     , tuExpiresAt
@@ -103,6 +104,10 @@ data TurnHost = TurnHostIp IpAddr
               | TurnHostName Text
     deriving (Eq, Show, Generic)
 
+isHostName :: TurnHost -> Bool
+isHostName (TurnHostIp   _) = False
+isHostName (TurnHostName _) = True
+
 data TurnUsername = TurnUsername
     { _tuExpiresAt :: POSIXTime
     , _tuVersion   :: Word
@@ -159,12 +164,12 @@ instance FromJSON RTCIceServer where
         RTCIceServer <$> o .: "urls" <*> o .: "username" <*> o .: "credential"
 
 parseTurnHost :: Text -> Maybe TurnHost
-parseTurnHost h =
-    let host = TE.encodeUtf8 h
-     in case BC.fromByteString host of
-                Just ip@(IpAddr _)           -> Just $ TurnHostIp ip
-                Nothing | validHostname host -> Just $ TurnHostName h
-                _                            -> Nothing
+parseTurnHost h = case BC.fromByteString host of
+    Just ip@(IpAddr _)           -> Just $ TurnHostIp ip
+    Nothing | validHostname host -> Just $ TurnHostName h -- NOTE: IPv4 addresses are also valid hostnames...
+    _                            -> Nothing
+  where
+    host = TE.encodeUtf8 h
 
 instance BC.FromByteString TurnHost where
     parser = BC.parser >>= maybe (fail "Invalid turn host") return . parseTurnHost

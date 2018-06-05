@@ -91,6 +91,7 @@ test-suite brig-types-tests
       , bytestring
       , currency-codes
       , galley-types
+      , hostname-validate
       , iproute
       , iso639
       , lens
